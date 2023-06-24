@@ -156,6 +156,7 @@ function Buttons({ addCardToRiver }) {
       <button onClick={() => showPlayerChat(1, "Check")}>Check</button>
       <button>Call</button>
       <button>Raise</button>
+      <button onClick={() => sendWSSMessage("Hi")}>Hi</button>
       <button onClick={() => userFolded(1)}>Fold</button>
       
     </div>
@@ -184,5 +185,20 @@ function App() {
     </div>
   );
 }
+
+//functions to send wss messages to server at port 8080
+function sendWSSMessage(message) {
+  let ws = new WebSocket("ws://localhost:8080");
+  ws.onopen = () => {
+    ws.send(message);
+  };
+  ws.onmessage = (event) => {
+    console.log(event.data);
+  };
+}
+
+
+
+
 
 export default App;
