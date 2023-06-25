@@ -2,6 +2,19 @@ body{
   background-color: #282c34;
 }
 
+
+.game-area{
+	width: 100%;
+	height: 100%;
+
+	&.blurred {
+		filter: blur(5px);
+	}
+
+	transition: all .3s ease-in-out;
+
+}
+
 .App {
   
   /* make the app the whole screen */
@@ -14,7 +27,7 @@ body{
 }
 
 .find-game-popup{
-	  position: absolute;
+position: absolute;
   top: 50%;
   left: 50%;
   transform: translateX(-50%) translateY(-50%);
@@ -33,9 +46,11 @@ body{
   opacity: 100;
   transition: all 0.3s ease-in-out;
   z-index: 1000;
+
   &.hide{
 	opacity: 0;
   }
+  
 
 }
 
@@ -48,6 +63,7 @@ body{
 	position:relative;
 	overflow-y:scroll;
 	overflow-x:hidden;
+	opacity: 1;
 	&::-webkit-scrollbar{
 		width:10px;
 		background-color:rgba(0, 0, 0, 0.3);
@@ -56,6 +72,13 @@ body{
 		background-color:rgba(0, 0, 0, .5);
 		border-radius:10px;
 	}
+	&.hide {
+		opacity: 0;
+		visibility: hidden;
+		height : 0%;
+	}
+
+	transition: all .3s ease-in-out;
 
 }
 
@@ -144,6 +167,77 @@ body{
 		&::placeholder{
 			color:rgba(255, 255, 255, .5);
 		}
+	}
+
+}
+
+.create-new-game-menu{
+	&.show{
+		opacity: 1;
+		height:100%;
+		width:100%;
+		visibility: visible;
+		
+		display:flex;
+		align-items:center;
+		text-align:left;
+		flex-direction:column;
+
+	}
+	&.hide{
+		opacity: 0;
+		visibility: hidden;
+		width:0%;
+		height:0%;
+	}
+
+	.server-name-new, .server-password, .server-starting-buy-in, .server-big-blind{
+		width: 80%;
+		height: 10%;
+		background-color: #1d2128c3;
+		padding: 20px;
+	}
+
+	.create-game-label{
+		color: white;
+		font-size: 20px;
+		padding: 20px;
+	}
+
+	.server-create-buttons{
+		display:flex;
+		flex-direction:row;
+		width: 90%;
+		height: 20%;
+		/* lign items center */
+		align-items:center;		
+		/* justify content space between */
+	}
+
+	#server-create-button,#go-back-create-game-button{
+		margin: 4px;
+		color: white;
+		font-size: 20px;
+		padding: 10px;
+		background-color: #1d2128c3;
+		border: none;
+		outline: none;
+		cursor: pointer;
+
+	}
+
+
+
+}
+
+#server-name-new, #server-password, #server-starting-buy-in, #server-big-blind{
+	background-color: darkgray;
+	height:25px;
+	width: 30%;
+	color:white;
+	font-size:17px;
+	&::placeholder{
+		color:rgba(255, 255, 255, .5);
 	}
 
 }
@@ -404,19 +498,6 @@ body{
 
 }
 
-button {
-  border: none;
-  background: none;
-  cursor: pointer;
-  outline: none;
-  font-size: 1.5rem;
-  color: #fff;
-  padding: 0 1rem;
-  transition: all 0.3s ease-in-out;
-  &:hover {
-    color: #63c763;
-  }
-}
 .card-place{
   display: flex;
   flex-direction: row;

@@ -148,7 +148,7 @@ wss.addListener('connection', function (ws) {
 
     //make a for loop that makes 20 tables with 8 players each
     for (let i = 0; i < 20; i++) {
-        const table = new Table(1000,2,"BallersOnly","password")
+        const table = new Table(1000,2,"BallersOnly","")
         for (let j = 0; j < 8; j++) {
             const player = new Player(100);
             player.setId(j);

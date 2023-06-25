@@ -196,13 +196,28 @@ function fetchServerList() {
       server = serverList[i];
       console.log(server.name);
       let element = ServerListItem(server);
-      console.log(element);
       document.querySelector(".server-list").appendChild(element);
 
     }
   }
   
 }
+
+
+function HideServerList() {
+  document.querySelector(".server-list").classList.add("hide");
+  document.querySelector(".create-new-game-menu").classList.remove("hide");
+  document.querySelector(".create-new-game-menu").classList.add("show");
+  document.querySelector("#find-game-title").innerHTML = "Create a Game";
+}
+
+function ShowServerList() {
+  document.querySelector(".server-list").classList.remove("hide");
+  document.querySelector(".create-new-game-menu").classList.remove("show");
+  document.querySelector(".create-new-game-menu").classList.add("hide");
+  document.querySelector("#find-game-title").innerHTML = "Find a Game";
+}
+
 
 function FindGamePopup() {
   const [serverList, setServerList] = useState([]);
@@ -213,22 +228,62 @@ function FindGamePopup() {
       .then(data => setServerList(data))
       .catch(error => console.error('Error:', error));
   }, []);
+  
+
+  //add blurred class to game-area
+  document.querySelector(".game-area").classList.add("blurred");
+
+//put createNewGameMenu in into find-game-popup
+
 
   return (
     <div className="find-game-popup">
-      <h3>Find a Game</h3>
+      <h3 id='find-game-title'>Find a Game</h3>
       <div className="server-list">
         {serverList.map(server => 
           <ServerListItem key={server.id} server={server} />
         )}
       </div>
+
+      {/* create game */}
+
+    <div className="create-new-game-menu hide">
+    <div className="server-name-new">
+      <label className="create-game-label" htmlFor="server-name">Server Name</label>
+      <input type="text" name="server-name-new" id="server-name-new" />
+    </div>
+    <div className="server-password">
+      <label className="create-game-label" htmlFor="server-password">Password (Optional)</label>
+      <input type="password" name="server-password" id="server-password" />
+    </div>
+    <div className="server-starting-buy-in">
+      <label className="create-game-label" htmlFor="server-starting-buy-in">Starting Bank ($)</label>
+      <input type="number" name="server-starting-buy-in" id="server-starting-buy-in" />
+    </div>
+    <div className="server-big-blind">
+      <label className="create-game-label" htmlFor="server-big-blind">Blind Cost ($)</label>
+      <input type="number" name="server-big-blind" id="server-big-blind" />
+    </div>
+    <div className="server-create-buttons">
+      <div className="go-back-create-game">
+        <button id="go-back-create-game-button" onClick={ShowServerList}>Back</button>
+      </div>   
+      <div className="server-create-submit">
+        <button id="server-create-button" onClick={()=>sendWSSMessage("balls")}>Create</button>
+      </div>
+    </div>
+    </div>
+    
+    {/* end create game */}
+
       <div className = "find-game-popup-lower">
         <input className="find-game-inputs" type="text" placeholder="Server Name" />
         <input className="find-game-inputs" type="password" placeholder="Password" />
         <button className="find-game-buttons">Connect</button>
-        <button className="find-game-buttons">New Game</button>
+        <button className="find-game-buttons" onClick={HideServerList}>New Game</button>
       </div>
     </div>
+
   );
 }
 
@@ -243,13 +298,14 @@ function App() {
 
   return (
     <div className="App">
-      <h1>React Poker</h1>
-      <FindGamePopup />
-      <Table cards={cards} />
-      <Players />
-    
-      {/* Pass addCardToRiver to Buttons component */}
-      <Buttons addCardToRiver={addCardToRiver} />
+        <FindGamePopup/>      
+        <h1>React Poker</h1>
+        <div className="game-area">
+          <Table cards={cards} />
+          <Players />
+        </div>
+        {/* Pass addCardToRiver to Buttons component */}
+        <Buttons addCardToRiver={addCardToRiver} />
     </div>
   );
 }
