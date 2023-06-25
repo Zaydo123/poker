@@ -1,6 +1,6 @@
 import logo from './logo.svg';
 import './App.css';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 
 let numberOfPlayers = 8;
@@ -165,18 +165,86 @@ function Buttons({ addCardToRiver }) {
 
 
 
+
+//generate server list item
+
+
+function ServerListItem({ server }) {
+  return (
+    <div className={`server-list-item server-${server.id}`}>
+      <div className="server-name">{server.roomName}</div>
+      <div className="server-players">{server.players.length}/8</div>
+      <div className={`lock locked-${server.password}`}></div>
+    </div>
+  );
+}
+
+
+function fetchServerList() {
+  //xhr request to get server list /fetchServerList
+  let xhr = new XMLHttpRequest();
+  xhr.open("GET", "http://localhost:3000/fetchServerList");
+  xhr.send();
+  xhr.onload = () => {
+    console.log(xhr.response);
+
+    //parse response
+    let serverList = JSON.parse(xhr.response);
+    //for each server in server list generate server list item
+    let server;
+    for(let i = 0; i < serverList.length; i++){
+      server = serverList[i];
+      console.log(server.name);
+      let element = ServerListItem(server);
+      console.log(element);
+      document.querySelector(".server-list").appendChild(element);
+
+    }
+  }
+  
+}
+
+function FindGamePopup() {
+  const [serverList, setServerList] = useState([]);
+
+  useEffect(() => {
+    fetch("http://localhost:3000/fetchServerList")
+      .then(response => response.json())
+      .then(data => setServerList(data))
+      .catch(error => console.error('Error:', error));
+  }, []);
+
+  return (
+    <div className="find-game-popup">
+      <h3>Find a Game</h3>
+      <div className="server-list">
+        {serverList.map(server => 
+          <ServerListItem key={server.id} server={server} />
+        )}
+      </div>
+      <div className = "find-game-popup-lower">
+        <input className="find-game-inputs" type="text" placeholder="Server Name" />
+        <input className="find-game-inputs" type="password" placeholder="Password" />
+        <button className="find-game-buttons">Connect</button>
+        <button className="find-game-buttons">New Game</button>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const [cards, setCards] = useState([]);
 
   const addCardToRiver = () => {
-
     let card = singleCard(...randomCard(),"inCardPlace");
     setCards(prevCards => [...prevCards, card]);
   };
 
+
   return (
     <div className="App">
       <h1>React Poker</h1>
+      <FindGamePopup />
       <Table cards={cards} />
       <Players />
     

@@ -13,6 +13,140 @@ body{
   text-shadow: 0px 0px 10px rgba(0,0,0,0.5);
 }
 
+.find-game-popup{
+	  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-50%);
+  width: 500px;
+  height: 500px;
+  background-color: #3a404b;
+  border-radius: 10px;
+  box-shadow: 0px 0px 10px rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  font-size: 20px;
+  color: #ffff;
+  text-shadow: none;
+  opacity: 100;
+  transition: all 0.3s ease-in-out;
+  z-index: 1000;
+  &.hide{
+	opacity: 0;
+  }
+
+}
+
+
+
+.server-list{
+	width:100%;
+	height:100%;
+	background-color:#282c34;
+	position:relative;
+	overflow-y:scroll;
+	overflow-x:hidden;
+	&::-webkit-scrollbar{
+		width:10px;
+		background-color:rgba(0, 0, 0, 0.3);
+	}
+	&::-webkit-scrollbar-thumb{
+		background-color:rgba(0, 0, 0, .5);
+		border-radius:10px;
+	}
+
+}
+
+.server-list-item{
+	width:95%;
+	height:100px;
+	position:relative;
+	display:flex;
+	justify-content:center;
+	align-items:center;
+	font-size:20px;
+	color: white;
+	cursor:pointer;
+	transition:all .3s ease-in-out;
+	&:not(:last-child){
+		margin-bottom:10px;
+	}
+	/* bottom border */
+	&:after{
+		content:'';
+		width:100%;
+		height:1px;
+		background-color:rgba(255, 255, 255, .1);
+		position:absolute;
+		bottom:0;
+		left:0;
+	}
+
+
+}
+
+.server-name{
+	padding: 20px;
+	position:absolute;
+	left:0;
+}
+
+
+.server-players{
+	padding: 20px;
+	position:absolute;
+	right:0;
+}
+
+.locked-true{
+	padding: 20px;
+	position: absolute;
+	left: 100%;
+	background-image: url('../public/assets/lock.png');
+	/* background image */
+	background-repeat: no-repeat;
+	background-size: 30%;
+}
+
+.locked-false{
+	visibility: hidden;
+}
+
+.find-game-popup-lower{
+	width:100%;
+	height:10%;
+	padding-top: 1%;
+	background-color:#1d2128c3;
+	position:relative;
+
+	/* inputs inside of this class */
+	.find-game-inputs{
+		background-color:transparent;
+		border:none;
+		outline:none;
+		color:white;
+		font-size:10px;
+		padding:0 20px;
+		&::placeholder{
+			color:rgba(255, 255, 255, .5);
+		}
+	}
+
+	.find-game-buttons{
+		background-color:transparent;
+		border:none;
+		outline:none;
+		color:white;
+		font-size:10px;
+		padding:0 20px;
+		&::placeholder{
+			color:rgba(255, 255, 255, .5);
+		}
+	}
+
+}
 
 
 .Table{
