@@ -6,7 +6,6 @@ const Deck = require('./deck.js');
 const Player = require('./player.js');
 const Table = require('./table.js');
 
-
 /* ------------------ */
 
 let gameLobbies = [];
@@ -20,6 +19,7 @@ const cors = require('cors');
 const port = 3000;
 
 app.use(cors());
+app.use(express.json());
 app.use(express.static('public'));
 
 //serve react app
@@ -58,11 +58,18 @@ app.get('/fetchServerList', (req, res) => {
     cleanedLobbies = gameLobbies;
 });
 
-
+app.get('/requiresPassword/:id', (req, res) => {
+    const id = req.params.id;
+    res.send(gameLobbies[id].getPassword());
+});
 
 
 wss.addListener('connection', function (ws) {
     ws.on('message', function (message) {
+
+        
+        let msg = JSON.parse(message);
+
         console.log('received: %s', message);
 
         // Parse message
@@ -70,59 +77,103 @@ wss.addListener('connection', function (ws) {
         try{
             JSON.parse(message);
         } catch (e) {
+            console.log(message);
+            console.log('bad')
             return;
         }
 
-        let msg = JSON.parse(message);
 
         // Check if message is a request to join a game
         if (msg.type === "join") {
             // Check if game exists
-            if (gameLobbies[msg.gameId] === undefined) {
+            if (gameLobbies[msg.serverID] === undefined) {
                 // respond
+                console.log(gameLobbies[msg.serverID])
                 ws.send(JSON.stringify({
                     type: "error",
                     message: "Game does not exist"
                 }));
                 return;
-            } else if (gameLobbies[msg.gameId].players.length >= 8) {
+            } else if (gameLobbies[msg.serverID].players.length >= 8) {
                 // respond
                 ws.send(JSON.stringify({
                     type: "error",
                     message: "Game is full"
                 }));
                 return;
+
+            } else if (!gameLobbies[msg.serverID].comparePassword(msg.password)) {
+
+                if(gameLobbies[msg.serverID].password.length <= 0){
+                    //respond wtf!
+
+                    ws.send(JSON.stringify({
+                        type: "error",
+                        message: "Game does not have a password"
+                    }));
+                    return;
+                }
+
+                ws.send(JSON.stringify({
+                    type: "error",
+                    message: "Incorrect password"
+                }));
+                return;
             } else {
                 // respond
+
+                console.log('user joined game ' + msg.serverID);
+                
                 ws.send(JSON.stringify({
                     type: "join",
-                    id: gameLobbies[msg.gameId].players.length
+                    id: gameLobbies[msg.serverID].players.length
                 }));
                 // Add player to game
-                gameLobbies[msg.gameId].players.push(new Player(gameLobbies[msg.gameId].startingBank));
-
-                // Send player their id
-                ws.send(JSON.stringify({
-                    type: "join",
-                    id: gameLobbies[msg.gameId].players.length - 1
-                }));
-
+                gameLobbies[msg.serverID].players.push(new Player(gameLobbies[msg.serverID].startingBank));
+                // Send player info to all players
+                for (let i = 0; i < gameLobbies[msg.serverID].players.length; i++) {
+                    ws.send(JSON.stringify({
+                        type: "player-join",
+                        id: i,
+                        name: gameLobbies[msg.serverID].players[i].name,
+                        bank: gameLobbies[msg.serverID].players[i].bank
+                    }));
+                }
             }
 
         }
 
         // Check if message is a request to create a game
-        if (msg.type === "create") {
+        else if (msg.type === "create") {
             // Create game
-            let table = new Table();
-            table.players.push(new Player(100));
+            console.log("setting password to " + msg.password);
+            /*
+        const table = new Table({"roomName":i,options:{"password":"hi"}});            
+            */
+            let table = new Table({"roomName":msg.roomName, options:{"password":msg.password, "startingBank":msg.startingBank, "blindAmount":msg.blindCost}});
+            table.setId(gameLobbies.length);
             gameLobbies.push(table);
+            
+            console.log(table);
 
-            // Respond
+            table.players.push(new Player(100));
+
+    
             ws.send(JSON.stringify({
                 type: "create",
                 id: gameLobbies.length - 1
             }));
+        
+           /*
+            ws.send(JSON.stringify({
+                type: "player-join",
+                id: 0,
+                state: "waiting",
+                name: "fugly",
+                bank: 100
+            }))
+            */
+
         }
 
     });
@@ -133,31 +184,21 @@ wss.addListener('connection', function (ws) {
 
 // Main function
 (async () => {
-    const table = new Table();
-    player1 = new Player(100);
-    player1.setId(0);
-    player2 = new Player(100);
-    player2.setId(1);
-    table.addPlayer(player1);
-    table.addPlayer(player2);
-    
-    table.setId(gameLobbies.length);
-    gameLobbies.push(table);
-
-    table.dealCards();
 
     //make a for loop that makes 20 tables with 8 players each
-    for (let i = 0; i < 20; i++) {
-        const table = new Table(1000,2,"BallersOnly","")
-        for (let j = 0; j < 8; j++) {
+    for (let i = 0; i < 10; i++) {
+        //      constructor({roomName="New Room",options = {startingBank:100,blindCost:2, password:""}} = {}){      
+        const table = new Table({"roomName":i,options:{"password":"hi"}});
+        for (let j = 0; j < 2; j++) {
             const player = new Player(100);
             player.setId(j);
             table.addPlayer(player);
 
         }
-        console.log(table.getPassword());
         table.setId(gameLobbies.length);
         gameLobbies.push(table);
+
+
     }
 
 

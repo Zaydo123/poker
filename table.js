@@ -8,14 +8,16 @@ class Table {
     #bigBlind;
     #smallBlind;
 
-    constructor(startingBank=100,blindAmount=2,roomName="New Room", password="") {
+    constructor({roomName="New Room",options = {password:"",startingBank:100,blindCost:2}}){        
         this.id = "";
-        this.startingBank = startingBank;
+        this.startingBank = options.startingBank;
         this.startedOn = new Date();
+        this.bigBlind = options.blindCost;
+        this.smallBlind = options.blindCost/2;
         this.roomName = roomName;
         //private variables
         this.players = [];
-        this.password = password;
+        this.password = options.password;
         this.deck = new Deck();
         this.river = [];
 
@@ -35,6 +37,11 @@ class Table {
 
     getPassword() {
         return this.password;
+    }
+
+    comparePassword(submittedPassword) {
+
+        return this.password === submittedPassword;
     }
 
     getId() {
@@ -65,6 +72,10 @@ class Table {
         for (let i = 0; i < amount; i++) {
             this.river.push(this.deck.cards.pop());
         }
+    }
+
+    toString() {
+        return JSON.stringify(this);
     }
     
 }
