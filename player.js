@@ -6,6 +6,7 @@ class Player {
         this.state = "waiting";
         this.hand = [];
         this.balance = startingBalance;
+        this.wsConnection = null;
     }
     setIp(ip) {
         this.ip = ip;

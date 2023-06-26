@@ -5,6 +5,8 @@ const Card = require('./card.js');
 const Deck = require('./deck.js');
 const Player = require('./player.js');
 const Table = require('./table.js');
+const _ = require('lodash');
+const { v4: uuidv4 } = require('uuid');
 
 /* ------------------ */
 
@@ -26,7 +28,7 @@ app.use(express.static('public'));
 
 function fetchServers(limit) {
     // Return list of servers
-    cleanedLobbies = gameLobbies;
+    cleanedLobbies = _.cloneDeep(gameLobbies);
     cleanedLobbies= cleanedLobbies.slice(0, limit);
 
     //get rid of cleanedLobbies[i].players, cleanedLobbies[i].deck, cleanedLobbies[i].river, cleanedLobbies[i].password
@@ -37,6 +39,9 @@ function fetchServers(limit) {
         for(let j = 0; j < cleanedLobbies[i].players.length; j++){
             delete cleanedLobbies[i].players[j].hand;
             delete cleanedLobbies[i].players[j].bank; 
+            delete cleanedLobbies[i].players[j].ip;
+            delete cleanedLobbies[i].players[j].id;
+            delete cleanedLobbies[i].players[j].wsConnection;
         }
 
         if(cleanedLobbies[i].password.length > 0 && typeof cleanedLobbies[i].password == "string"){
@@ -55,16 +60,15 @@ function fetchServers(limit) {
 
 app.get('/fetchServerList', (req, res) => {
     res.send(fetchServers(15));
-    cleanedLobbies = gameLobbies;
+    cleanedLobbies = _.cloneDeep(gameLobbies);
 });
 
 app.get('/requiresPassword/:id', (req, res) => {
     const id = req.params.id;
-    res.send(gameLobbies[id].getPassword());
+    res.send(gameLobbies[id].getPassword().length > 0);
 });
 
-
-wss.addListener('connection', function (ws) {
+wss.addListener('connection', function (ws,req) {
     ws.on('message', function (message) {
 
         
@@ -122,22 +126,34 @@ wss.addListener('connection', function (ws) {
             } else {
                 // respond
 
+                
+
+                let newPlayer = new Player(gameLobbies[msg.serverID].startingBank);
+                let userID = uuidv4();
+                let publicUserID = gameLobbies[msg.serverID].players.length;
+                newPlayer.setId(userID);
+                newPlayer.setName(msg.name);
+                newPlayer.wsConnection = ws;
+                
                 console.log('user joined game ' + msg.serverID);
                 
                 ws.send(JSON.stringify({
-                    type: "join",
-                    id: gameLobbies[msg.serverID].players.length
+                    type: "join-self",
+                    id: userID
                 }));
                 // Add player to game
-                gameLobbies[msg.serverID].players.push(new Player(gameLobbies[msg.serverID].startingBank));
+
+        
+                gameLobbies[msg.serverID].players.push(newPlayer);
                 // Send player info to all players
                 for (let i = 0; i < gameLobbies[msg.serverID].players.length; i++) {
-                    ws.send(JSON.stringify({
-                        type: "player-join",
-                        id: i,
+                    gameLobbies[msg.serverID].players[i].wsConnection.send(JSON.stringify({
+                        type: "join",
+                        id: publicUserID,
                         name: gameLobbies[msg.serverID].players[i].name,
                         bank: gameLobbies[msg.serverID].players[i].bank
                     }));
+                    console.log("sent to " + gameLobbies[msg.serverID].players[i].id);
                 }
             }
 
@@ -155,9 +171,6 @@ wss.addListener('connection', function (ws) {
             gameLobbies.push(table);
             
             console.log(table);
-
-            table.players.push(new Player(100));
-
     
             ws.send(JSON.stringify({
                 type: "create",
@@ -184,24 +197,6 @@ wss.addListener('connection', function (ws) {
 
 // Main function
 (async () => {
-
-    //make a for loop that makes 20 tables with 8 players each
-    for (let i = 0; i < 10; i++) {
-        //      constructor({roomName="New Room",options = {startingBank:100,blindCost:2, password:""}} = {}){      
-        const table = new Table({"roomName":i,options:{"password":"hi"}});
-        for (let j = 0; j < 2; j++) {
-            const player = new Player(100);
-            player.setId(j);
-            table.addPlayer(player);
-
-        }
-        table.setId(gameLobbies.length);
-        gameLobbies.push(table);
-
-
-    }
-
-
 
 })();
 

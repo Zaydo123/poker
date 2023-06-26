@@ -40,7 +40,6 @@ class Table {
     }
 
     comparePassword(submittedPassword) {
-
         return this.password === submittedPassword;
     }
 
