@@ -41,6 +41,7 @@ function fetchServers(limit) {
             delete cleanedLobbies[i].players[j].bank; 
             delete cleanedLobbies[i].players[j].ip;
             delete cleanedLobbies[i].players[j].id;
+            delete cleanedLobbies[i].players[j].privateID;
             delete cleanedLobbies[i].players[j].wsConnection;
         }
 
@@ -90,7 +91,7 @@ wss.addListener('connection', function (ws,req) {
         // Check if message is a request to join a game
         if (msg.type === "join") {
             // Check if game exists
-            if (gameLobbies[msg.serverID] === undefined) {
+            if (gameLobbies[msg.serverID] === undefined) { // Check if game exists
                 // respond
                 console.log(gameLobbies[msg.serverID])
                 ws.send(JSON.stringify({
@@ -98,7 +99,7 @@ wss.addListener('connection', function (ws,req) {
                     message: "Game does not exist"
                 }));
                 return;
-            } else if (gameLobbies[msg.serverID].players.length >= 8) {
+            } else if (gameLobbies[msg.serverID].players.length >= 8) { // Check if game is full
                 // respond
                 ws.send(JSON.stringify({
                     type: "error",
@@ -106,11 +107,9 @@ wss.addListener('connection', function (ws,req) {
                 }));
                 return;
 
-            } else if (!gameLobbies[msg.serverID].comparePassword(msg.password)) {
+            } else if (!gameLobbies[msg.serverID].comparePassword(msg.password)) { // Check if password is correct
 
                 if(gameLobbies[msg.serverID].password.length <= 0){
-                    //respond wtf!
-
                     ws.send(JSON.stringify({
                         type: "error",
                         message: "Game does not have a password"
@@ -123,23 +122,30 @@ wss.addListener('connection', function (ws,req) {
                     message: "Incorrect password"
                 }));
                 return;
-            } else {
+
+            } else if (gameLobbies[msg.serverID].players.find(player => player.privateID === msg.privateID)) {   // Check if player is already in game
                 // respond
+                ws.send(JSON.stringify({
+                    type: "error",
+                    message: "You are already in this game"
+                }));
+                return;
 
-                
-
+            } else {
+                // Create player
                 let newPlayer = new Player(gameLobbies[msg.serverID].startingBank);
                 let userID = uuidv4();
                 let publicUserID = gameLobbies[msg.serverID].players.length;
                 newPlayer.setId(userID);
                 newPlayer.setName(msg.name);
+                newPlayer.setPrivateID(msg.privateID);
                 newPlayer.wsConnection = ws;
                 
                 console.log('user joined game ' + msg.serverID);
                 
                 ws.send(JSON.stringify({
                     type: "join-self",
-                    id: userID
+                    player: {id: userID, name: msg.name, bank: gameLobbies[msg.serverID].startingBank}
                 }));
                 // Add player to game
 
@@ -162,14 +168,41 @@ wss.addListener('connection', function (ws,req) {
         // Check if message is a request to create a game
         else if (msg.type === "create") {
             // Create game
-            console.log("setting password to " + msg.password);
-            /*
-        const table = new Table({"roomName":i,options:{"password":"hi"}});            
-            */
+
+            if(msg.roomName.length <= 0){
+                ws.send(JSON.stringify({
+                    type: "error",
+                    message: "Room name cannot be empty"
+                }));
+                return;
+            } else if(msg.roomName.length > 20){
+                ws.send(JSON.stringify({
+                    type: "error",
+                    message: "Room name cannot be longer than 20 characters"
+                }));
+                return;
+            } else if(msg.password.length > 20){
+                ws.send(JSON.stringify({
+                    type: "error",
+                    message: "Password cannot be longer than 20 characters"
+                }));
+                return;
+            }
+
+            //see if duplicate name
+            for(let i = 0; i < gameLobbies.length; i++){
+                if(gameLobbies[i].roomName == msg.roomName){
+                    ws.send(JSON.stringify({
+                        type: "error",
+                        message: "Room name already exists"
+                    }));
+                    return;
+                }
+            }
+
             let table = new Table({"roomName":msg.roomName, options:{"password":msg.password, "startingBank":msg.startingBank, "blindAmount":msg.blindCost}});
             table.setId(gameLobbies.length);
             gameLobbies.push(table);
-            
             console.log(table);
     
             ws.send(JSON.stringify({

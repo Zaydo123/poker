@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
 import FindGamePopup from './findGamePopup'; 
 import sendWSSMessage from './sendWSSMessage'; 
-import Player from './player';
+import PokerTable from './player';
 
 
 let numberOfPlayers = 1;
@@ -114,13 +114,6 @@ function showPlayerChat(user, message) {
 }
 
 
-function Players({ players }) {
-  return (
-      <div className="Players">
-          {players}
-      </div>
-  );
-}
 
 
 function Buttons({ addCardToRiver }) {
@@ -138,6 +131,7 @@ function Buttons({ addCardToRiver }) {
     </div>
   );
 }
+
 
 
 
@@ -163,10 +157,11 @@ function App() {
   return (
     <div className="App">
         <FindGamePopup/>      
-        <h1>React Poker</h1>
-        <div className="game-area">
+        <h1>React</h1>
+        <div className="game-area blurred">
           <Table cards={cards} />
-          <Players />
+          <PokerTable /> {/* USER HANDLER */}
+          
         </div>
         {/* Pass addCardToRiver to Buttons component */}
         <Buttons addCardToRiver={addCardToRiver} />

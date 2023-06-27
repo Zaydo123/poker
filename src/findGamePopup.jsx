@@ -1,33 +1,53 @@
 import React, { useState, useEffect } from 'react';
-import sendWSSMessage from './sendWSSMessage.jsx';
+import useWebSocket from './sendWSSMessage'; // Adjust this path to wherever your useWebSocket hook is
 
-function sendJoinRequest(serverID){
+let WSS_URL = "ws://localhost:8080";
 
-    //first check if password is required
-    //if password is required, prompt user for password
+function GameJoin({ serverID }) {
+  const handleWebSocketMessage = (message) => {
+    switch (message.type) {
+      case 'error':
+        alert(message.message);
+        break;
+      default:
+        break;
+    }
+  }
 
-    //fetch request to /requiresPassword/:serverId
+  const { sendWSSMessage } = useWebSocket(WSS_URL, handleWebSocketMessage);
+
+  useEffect(() => {
+    let localPlayerId = localStorage.getItem("playerId");
+    if(localPlayerId === null || localPlayerId === "" || localPlayerId === undefined){
+        localPlayerId = "";
+    }
 
     let origin = window.location.origin;
     if(origin.includes("3001")){
         origin = origin.replace("3001", "3000");
     }
 
+    let username = prompt("Enter username");
+    if(username === null || username === ""){
+        return;
+    }
+
     fetch(`${origin}/requiresPassword/${serverID}`)
-        .then(response => response.json())
-        .then(data => {
-            let password = "";
-            if(data){
-                //prompt user for password
-                password = prompt("Enter password");
-            }
-            let res = sendWSSMessage({"type":"join", "serverID":serverID, "password":password});
-            console.log(res);
+      .then(response => response.json())
+      .then(data => {
+        let password = "";
+        if(data){
+          //prompt user for password
+          password = prompt("Enter password");
+        }
+        sendWSSMessage({"type":"join", "name":username ,"serverID":serverID, "password":password, "playerId":localPlayerId});
+      })
+      .catch(error => console.error('Error:', error));
+  }, [serverID, sendWSSMessage]);
 
-        })
-        .catch(error => console.error('Error:', error));
-
+  return null; // Or return some JSX if you want this component to render something
 }
+
 
 function HideServerList() {
     document.querySelector(".server-list").classList.add("hide");
@@ -45,7 +65,7 @@ function HideServerList() {
 
 function ServerListItem({ server }) {
     return (
-      <div onClick={()=> sendJoinRequest(server.id)} className={`server-list-item server-${server.id}`}>
+      <div onClick={()=> GameJoin(server.id)} className={`server-list-item server-${server.id}`}>
         <div className="server-name">{server.roomName}</div>
         <div className="server-players">{server.players.length}/8</div>
         <div className={`lock locked-${server.password}`}></div>
@@ -53,7 +73,21 @@ function ServerListItem({ server }) {
     );
 }
 
-function createNewRoom(){
+
+function RoomCreator() {
+  const handleWebSocketMessage = (message) => {
+    switch (message.type) {
+      case 'error':
+        alert(message.message);
+        break;
+      default:
+        break;
+    }
+  }
+
+  const { sendWSSMessage } = useWebSocket(WSS_URL, handleWebSocketMessage);
+
+  const createNewRoom = () => {
     //get room name
     let roomName = document.querySelector("#server-name-new").value;
     //get password
@@ -62,8 +96,24 @@ function createNewRoom(){
     let startingBank = document.querySelector("#server-starting-buy-in").value;
     //get blind cost
     let blindCost = document.querySelector("#server-big-blind").value;
-    let res = sendWSSMessage({"type":"create", "roomName":roomName, "password":password, "startingBank":startingBank, "blindCost":blindCost});
+    
+    sendWSSMessage({
+      "type": "create",
+      "roomName": roomName,
+      "password": password,
+      "startingBank": startingBank,
+      "blindCost": blindCost
+    });
   }
+
+  return (
+    <div>
+      {/* Here you'd probably have your input fields for roomName, password, etc. */}
+      <button id="server-create-button" onClick={createNewRoom}>Create Game</button>
+    </div>
+  );
+}
+
 
   function fetchServerList() {
     //xhr request to get server list /fetchServerList
@@ -139,7 +189,7 @@ function FindGamePopup() {
           <button id="go-back-create-game-button" onClick={ShowServerList}>Back</button>
         </div>   
         <div className="server-create-submit">
-          <button id="server-create-button" onClick={()=>createNewRoom()}>Create</button>
+         < RoomCreator />
         </div>
       </div>
       </div>

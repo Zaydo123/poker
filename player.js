@@ -3,6 +3,7 @@ class Player {
         this.ip = "";
         this.name = "";
         this.id = "";
+        this.privateID = "";
         this.state = "waiting";
         this.hand = [];
         this.balance = startingBalance;
@@ -17,6 +18,11 @@ class Player {
     setId(id) {
         this.id = id;
     }
+
+    setPrivateID(id) {
+        this.privateID = id;
+    }
+
     setState(state) {
         this.state = state;
     }
